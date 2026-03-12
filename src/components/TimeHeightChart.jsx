@@ -66,8 +66,8 @@ const TimeHeightChart = ({ results1, results2, simState, scaleMax, getX, getY, t
     const gridLinesX = [];
     for (let t = 0; t <= maxTime; t += gridT_step) { gridLinesX.push(t); }
 
-    // Y ticks: match marker logic from StickmanSimulation for perfect alignment
-    const gridH_step = scaleMax > 2 ? 1.0 : 0.5;
+    // Y ticks: match marker logic from StickmanSimulation for perfect alignment (always 0.5m)
+    const gridH_step = 0.5;
     const gridLinesY = [];
     for (let y = 0; y <= scaleMax; y += gridH_step) { gridLinesY.push(y); }
 
