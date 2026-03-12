@@ -1,85 +1,79 @@
 import React from 'react';
 
-const ResultsPanel = ({ results }) => {
+const ResultsPanel = ({ results, results2, avgVelocity }) => {
     if (!results) return null;
+
+    const renderResultGrid = (res, title, color) => (
+        <div style={{ flex: 1 }}>
+            {title && <h4 className="mb-3" style={{ color: color || 'inherit' }}>{title}</h4>}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
+                <div className="result-box">
+                    <span className="result-label">Target Height</span>
+                    <span className="result-value">{res.h.toFixed(2)} m</span>
+                </div>
+                <div className="result-box">
+                    <span className="result-label">Initial Velocity</span>
+                    <span className="result-value">{res.v.toFixed(2)} m/s</span>
+                </div>
+                <div className="result-box">
+                    <span className="result-label">Avg. Velocity (Ascent)</span>
+                    <span className="result-value">{(res.v / 2).toFixed(2)} m/s</span>
+                </div>
+                <div className="result-box">
+                    <span className="result-label">Time to Peak</span>
+                    <span className="result-value">{res.t_up.toFixed(2)} s</span>
+                </div>
+                <div className="result-box">
+                    <span className="result-label">Total Airtime</span>
+                    <span className="result-value">{res.t_total.toFixed(2)} s</span>
+                </div>
+                <div className="result-box">
+                    <span className="result-label">Weight (W)</span>
+                    <span className="result-value">{res.w.toFixed(2)} N</span>
+                </div>
+                <div className="result-box">
+                    <span className="result-label">Momentum (p)</span>
+                    <span className="result-value">{res.p.toFixed(2)} kg·m/s</span>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="card" style={{ marginTop: '2rem' }}>
             <h3 className="mb-4">Simulation Results</h3>
 
-            {results.isDefaultMass && (
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1rem', fontStyle: 'italic' }}>
-                    * Assuming average body mass of 70 kg for force and energy calculations.
-                </p>
+            {results2 && avgVelocity !== null && (
+                <div className="result-box" style={{ marginBottom: '2rem', border: '2px solid var(--accent-color)', backgroundColor: '#f0f9ff', textAlign: 'center' }}>
+                    <span className="result-label" style={{ color: 'var(--primary-color)' }}>Combined Average Initial Velocity</span>
+                    <span className="result-value" style={{ fontSize: '2.5rem' }}>{avgVelocity.toFixed(2)} m/s</span>
+                </div>
             )}
 
-            {/* Landscape grid: always horizontal rows of results */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
-                <div className="result-box">
-                    <span className="result-label">Jump Height (Target)</span>
-                    <span className="result-value">{results.h.toFixed(2)} m</span>
-                </div>
-
-                <div className="result-box">
-                    <span className="result-label">Initial Velocity (v)</span>
-                    <span className="result-value">{results.v.toFixed(2)} m/s</span>
-                </div>
-
-                <div className="result-box">
-                    <span className="result-label">Time to Peak (t_up)</span>
-                    <span className="result-value">{results.t_up.toFixed(2)} s</span>
-                </div>
-
-                <div className="result-box">
-                    <span className="result-label">Total Airtime (t_total)</span>
-                    <span className="result-value">{results.t_total.toFixed(2)} s</span>
-                </div>
-
-                <div className="result-box">
-                    <span className="result-label">Weight (W)</span>
-                    <span className="result-value">{results.w.toFixed(2)} N</span>
-                </div>
-
-                <div className="result-box">
-                    <span className="result-label">Momentum (p)</span>
-                    <span className="result-value">{results.p.toFixed(2)} kg·m/s</span>
-                </div>
-
-                <div className="result-box">
-                    <span className="result-label">Kinetic Energy (Takeoff)</span>
-                    <span className="result-value">{results.ke.toFixed(2)} J</span>
-                </div>
-
-                <div className="result-box">
-                    <span className="result-label">Potential Energy (Peak)</span>
-                    <span className="result-value">{results.pe.toFixed(2)} J</span>
-                </div>
+            <div style={{ display: 'flex', flexDirection: results2 ? 'column' : 'row', gap: '2rem' }}>
+                {renderResultGrid(results, results2 ? "Simulation 1" : null, "var(--accent-color)")}
+                {results2 && renderResultGrid(results2, "Simulation 2", "#f97316")}
             </div>
 
-            {/* Height vs Time Equation — full width */}
-            <div className="result-box" style={{ marginTop: '1rem' }}>
-                <span className="result-label">Height vs Time Equation</span>
-                <span className="result-value" style={{ fontSize: '1.25rem', fontFamily: 'monospace' }}>{results.eqStr}</span>
+            {/* Height vs Time Equations */}
+            <div style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: results2 ? '1fr 1fr' : '1fr', gap: '1rem' }}>
+                <div className="result-box">
+                    <span className="result-label">Eq. 1: {results.eqStr}</span>
+                </div>
+                {results2 && (
+                    <div className="result-box">
+                        <span className="result-label">Eq. 2: {results2.eqStr}</span>
+                    </div>
+                )}
             </div>
 
-            {/* Physics interpretation */}
             <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#eff6ff', borderRadius: '0.75rem', border: '1px solid #bfdbfe' }}>
                 <p style={{ color: '#1e3a8a' }}>
-                    <strong>Interpretation:</strong> To reach {results.h.toFixed(2)} meters, the jumper needs an initial upward velocity of {results.v.toFixed(2)} m/s and stays in the air for approximately {results.t_total.toFixed(2)} seconds. The takeoff kinetic energy perfectly converts into the peak potential energy.
+                    <strong>Interpretation:</strong> {results2
+                        ? `Comparing both, Sim 2 requires ${results2.v > results.v ? 'more' : 'less'} initial velocity than Sim 1 to reach its target height.`
+                        : `To reach ${results.h.toFixed(2)} meters, the jumper needs an initial upward velocity of ${results.v.toFixed(2)} m/s.`}
                 </p>
             </div>
-
-            {/* Mass explanation — shown when mass is entered */}
-            {!results.isDefaultMass && (
-                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fefce8', borderRadius: '0.75rem', border: '1px solid #fde68a' }}>
-                    <p style={{ color: '#92400e', fontWeight: 600, marginBottom: '0.5rem' }}>
-                        💡 How does body mass affect the jump?
-                    </p>
-                    <p style={{ color: '#78350f', fontSize: '0.95rem', lineHeight: 1.7 }}>
-                        A greater body mass does not automatically mean a lower jump. However, reaching the same jump height with a greater mass requires <strong>more energy</strong>. The jump height is determined solely by the initial velocity — which comes from the kinematic equation <em>v = √(2gh)</em>. Body mass affects energy-related values (KE, PE), weight (W), and momentum (p), but does not change the height or airtime of the jump itself.
-                    </p>
-                </div>
-            )}
         </div>
     );
 };

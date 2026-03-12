@@ -128,7 +128,7 @@
   margin-top: 2rem;
 }
 
-/* Simulator Grid */
+/* Simulator Layout */
 .simulator-layout {
   display: grid;
   gap: 2.5rem;
@@ -144,6 +144,17 @@
 @media (min-width: 1280px) {
   .simulator-layout {
     grid-template-columns: 4fr 5fr;
+  }
+}
+
+.simulator-layout .card {
+  height: 400px;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .simulator-layout .card {
+    height: 550px;
   }
 }
 
@@ -176,11 +187,12 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 10%;
-  min-height: 40px;
-  background: linear-gradient(to bottom, #84cc16, #4d7c0f);
-  /* Subdued grass green gradient */
-  border-top: 4px solid #65a30d;
+  height: 15%;
+  min-height: 50px;
+  background: linear-gradient(to bottom, #d1d5db 0%, #9ca3af 10%);
+  /* Concrete styling */
+  border-top: 3px solid #64748b;
+  box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.05);
   z-index: 10;
 }
 
@@ -190,7 +202,13 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, #bae6fd, #f0f9ff);
+  background-color: #f1f5f9;
+  /* Soft laboratory gray */
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  /* Laboratory Grid */
   z-index: 0;
 }
 
@@ -238,6 +256,45 @@
   position: absolute;
   right: 18px;
   transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Horizontal Time Meter styled like Height Meter */
+.time-scale {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  z-index: 10;
+}
+
+/* The solid horizontal line */
+.time-scale::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10%;
+  right: 5%;
+  border-top: 2px dashed rgba(59, 130, 246, 0.4);
+}
+
+.time-scale-mark {
+  position: absolute;
+  top: 0px;
+  height: 20px;
+  border-left: 2px solid var(--accent-color);
+}
+
+.time-scale-label {
+  position: absolute;
+  top: 22px;
+  transform: translateX(-50%);
   font-size: 0.75rem;
   color: var(--primary-color);
   font-weight: 700;
