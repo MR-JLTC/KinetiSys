@@ -36,22 +36,16 @@ const FormulaSection = () => {
                                 The force exerted by gravity on the jumper's mass (m). Measured in Newtons.
                             </p>
 
-                            <h4 className="mb-2">Potential Energy (PE)</h4>
-                            <div className="equation-block">PE = m × g × h</div>
-                            <p className="mb-6" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                The energy stored by an object due to its position relative to Earth. At the peak, all kinetic energy has converted to potential energy.
-                            </p>
-
-                            <h4 className="mb-2">Momentum at Takeoff (p)</h4>
-                            <div className="equation-block">p = m × v</div>
+                            <h4 className="mb-2">Interpreted Mass (Heuristic)</h4>
+                            <div className="equation-block">M = 70 × (T_theo / T_actual)</div>
                             <p className="mb-0" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                                The quantity of motion the jumper has when leaving the ground.
+                                A sports-logic heuristic to estimate mass requirements based on the deviation from theoretical airtime (T_theo = 2√(2H/g)).
                             </p>
                         </div>
                     </div>
 
                     <div className="mt-8" style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--border-color)' }}>
-                        <p style={{ fontSize: '0.875rem' }}><strong>Constants:</strong> Acceleration due to gravity (g) ≈ 9.81 m/s²</p>
+                        <p style={{ fontSize: '0.875rem' }}><strong>Constants:</strong> Acceleration due to gravity (g) = 9.8 m/s²</p>
                     </div>
                 </div>
             </div>

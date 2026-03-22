@@ -1,160 +1,167 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
+import './InputPanel.css';
+import { calculatePhysicsResult } from '../utils/physicsSolver';
 
-const InputPanel = ({ inputs, inputs2, simCount, handleInputChange, handleInputChange2, handleSimulate, handleReset, isSimulating, error, error2 }) => {
+const InputPanel = ({ inputs, inputs2, simCount, handleInputChange, handleInputChange2, handleSimulate, handleReset, isSimulating, error, error2, results, results2, simState }) => {
 
-    const [currentStep, setCurrentStep] = useState(1);
+    const isSim2Active = simState?.includes('2');
 
-    // Reset step if simCount changes
-    useEffect(() => {
-        if (simCount === 1) setCurrentStep(1);
-    }, [simCount]);
+    // Real-time interpretations for each sim
+    const liveInterpreted1 = useMemo(() => {
+        const res = calculatePhysicsResult(inputs.height, inputs.mass, inputs.time);
+        return res.interpreted;
+    }, [inputs]);
 
-    const handleNextStep = () => {
-        if (currentStep === 1) {
-            if (!inputs.height || parseFloat(inputs.height) <= 0) return; // Prevent advancing if height 1 is invalid
-            setCurrentStep(2);
-        }
+    const liveInterpreted2 = useMemo(() => {
+        if (simCount < 2) return null;
+        const res = calculatePhysicsResult(inputs2.height, inputs2.mass, inputs2.time);
+        return res.interpreted;
+    }, [inputs2, simCount]);
+
+    const interpreted1 = results?.interpreted || liveInterpreted1;
+    const interpreted2 = results2?.interpreted || liveInterpreted2;
+    const interpreted = simCount === 1 ? interpreted1 : (isSim2Active ? interpreted2 : interpreted1);
+
+    const RulerIcon = () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.3 15.3l-3.4-3.4c-.7-.7-1.9-.7-2.6 0l-3.4 3.4c-.7.7-.7 1.9 0 2.6l3.4 3.4c.7.7 1.9.7 2.6 0l3.4-3.4c.7-.7.7-1.9 0-2.6z" />
+            <path d="m3.5 11 3.5 3.5h0" /><path d="m5 12.5 1.5 1.5" /><path d="m8.2 6.3 3.5 3.5" /><path d="m9.8 7.8 1.5 1.5" /><path d="M12.9 1.4l3.5 3.5" /><path d="m14.5 2.9 1.5 1.5" />
+        </svg>
+    );
+
+    const WeightIcon = () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="5" r="3" /><path d="M6.5 8a2 2 0 0 0-1.905 1.46L2.1 18.5A2 2 0 0 0 4 21h16a2 2 0 0 0 1.9-2.5l-2.495-9.04A2 2 0 0 0 17.5 8Z" />
+        </svg>
+    );
+
+    const ClockIcon = () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
+    );
+
+    const LightbulbIcon = () => (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5" />
+            <path d="M9 18h6" /><path d="M10 22h4" />
+        </svg>
+    );
+
+    const PlayIcon = () => (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <path d="M8 5.14v14l11-7-11-7z" />
+        </svg>
+    );
+
+    const ResetIcon = () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+        </svg>
+    );
+
+    const renderInputGroup = (id, name, label, icon, value, onChange, placeholder = "0", disabled = false, errorMsg = null) => (
+        <div className="input-row">
+            <label className="input-label" htmlFor={id}>
+                {icon} {label}
+            </label>
+            <input
+                id={id} name={name} type="number" step="0.01" min="0.01"
+                placeholder={placeholder}
+                className="input-field compact-input"
+                value={value} onChange={onChange} disabled={disabled}
+            />
+            {errorMsg && <div className="input-error-inline">{errorMsg}</div>}
+        </div>
+    );
+
+    const renderInterpretedInline = (interpData) => {
+        if (!interpData) return null;
+        return (
+            <div className="interpreted-inline">
+                <LightbulbIcon />
+                <span className="interpreted-badge-sm">AUTO</span>
+                <span className="interpreted-label">{interpData.name}:</span>
+                <span className="interpreted-val">{interpData.value}</span>
+            </div>
+        );
     };
 
-    const handlePrevStep = () => {
-        setCurrentStep(1);
-    };
-
-    const handleLocalReset = () => {
-        setCurrentStep(1);
-        handleReset();
-    };
+    // Dynamically show scrollbar only when needed to strictly match user request
+    const showScrollbar = simCount === 2 && (interpreted1 || interpreted2 || error || error2);
 
     return (
-        <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-            <h3 className="mb-4">Simulation Parameters</h3>
+        <div className={`card input-panel-card ${showScrollbar ? 'show-scroll' : 'hide-scroll'}`}>
+            <div className="design-blob"></div>
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto' }}>
+            <div className="panel-header">
+                <h3 className="panel-title">Parameters</h3>
+                {simCount === 2 && <span className="sim-count-badge">2 Jumps</span>}
+            </div>
 
-                {/* Step 1: Simulation 1 Settings */}
-                {currentStep === 1 && (
-                    <div className="fade-in" style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: '#f8fafc' }}>
-                        {simCount === 2 && <h4 className="mb-3" style={{ fontSize: '1rem', color: 'var(--accent-color)' }}>Simulation 1 (1 of 2)</h4>}
-                        <div className="input-group">
-                            <label className="input-label" htmlFor="height">Target Jump Height (meters) *</label>
-                            <input
-                                id="height"
-                                name="height"
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                placeholder="e.g., 0.75"
-                                className="input-field"
-                                value={inputs.height}
-                                onChange={handleInputChange}
-                                disabled={isSimulating}
-                            />
-                            {error && <div className="input-error">{error}</div>}
-                        </div>
-
-                        <div className="input-group">
-                            <label className="input-label" htmlFor="mass">Body Mass (kilograms) [Optional]</label>
-                            <input
-                                id="mass"
-                                name="mass"
-                                type="number"
-                                step="0.1"
-                                min="1"
-                                placeholder="e.g., 70"
-                                className="input-field"
-                                value={inputs.mass}
-                                onChange={handleInputChange}
-                                disabled={isSimulating}
-                            />
-                        </div>
+            <div className="sims-container">
+                {/* Simulation 1 */}
+                <div className="sim-block sim-1">
+                    <div className="sim-header">
+                        <div className="sim-num sim-num-1">1</div>
+                        <span className="sim-label">{simCount === 1 ? 'Jump Settings' : 'Jump 1'}</span>
                     </div>
-                )}
+                    <div className="sim-inputs">
+                        {renderInputGroup('height', 'height', 'H (m)', <RulerIcon />, inputs.height, handleInputChange, '0', isSimulating, error)}
+                        {renderInputGroup('mass', 'mass', 'M (kg)', <WeightIcon />, inputs.mass, handleInputChange, '0', isSimulating)}
+                        {renderInputGroup('time', 'time', 'T (s)', <ClockIcon />, inputs.time, handleInputChange, '0', isSimulating)}
+                    </div>
+                    {renderInterpretedInline(interpreted1)}
+                </div>
 
-                {/* Step 2: Simulation 2 Settings */}
-                {currentStep === 2 && simCount === 2 && (
-                    <div className="fade-in" style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: '#fff7ed' }}>
-                        <h4 className="mb-3" style={{ fontSize: '1rem', color: '#f97316' }}>Simulation 2 (2 of 2)</h4>
-                        <div className="input-group">
-                            <label className="input-label" htmlFor="height2">Target Jump Height (meters) *</label>
-                            <input
-                                id="height2"
-                                name="height"
-                                type="number"
-                                step="0.01"
-                                min="0.01"
-                                placeholder="e.g., 0.85"
-                                className="input-field"
-                                value={inputs2.height}
-                                onChange={handleInputChange2}
-                                disabled={isSimulating}
-                            />
-                            {error2 && <div className="input-error">{error2}</div>}
+                {/* Simulation 2 */}
+                {simCount === 2 && (
+                    <div className="sim-block sim-2">
+                        <div className="sim-header">
+                            <div className="sim-num sim-num-2">2</div>
+                            <span className="sim-label">Jump 2</span>
                         </div>
-
-                        <div className="input-group">
-                            <label className="input-label" htmlFor="mass2">Body Mass (kilograms) [Optional]</label>
-                            <input
-                                id="mass2"
-                                name="mass"
-                                type="number"
-                                step="0.1"
-                                min="1"
-                                placeholder="e.g., 80"
-                                className="input-field"
-                                value={inputs2.mass}
-                                onChange={handleInputChange2}
-                                disabled={isSimulating}
-                            />
+                        <div className="sim-inputs">
+                            {renderInputGroup('height2', 'height', 'H (m)', <RulerIcon />, inputs2.height, handleInputChange2, '0', isSimulating, error2)}
+                            {renderInputGroup('mass2', 'mass', 'M (kg)', <WeightIcon />, inputs2.mass, handleInputChange2, '0', isSimulating)}
+                            {renderInputGroup('time2', 'time', 'T (s)', <ClockIcon />, inputs2.time, handleInputChange2, '0', isSimulating)}
                         </div>
+                        {renderInterpretedInline(interpreted2)}
                     </div>
                 )}
             </div>
 
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '1rem', marginBottom: '1rem' }}>
-                * Mass helps calculate Force, Energy and Momentum. Velocity and Time depend on Height.
-            </p>
+            {/* Single-sim interpretation */}
+            {/* {simCount === 1 && interpreted && (
+                <div className="tip-box interpretation-active">
+                    <div className="tip-icon-container"><LightbulbIcon /></div>
+                    <div className="tip-content">
+                        <div className="interpretation-layout">
+                            <span className="interpretation-badge">Auto-filled</span>
+                            <p className="tip-text interpretation-text">
+                                {interpreted.name}: <span className="interpretation-value">{interpreted.value}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )} */}
 
-            {/* Stepper / Action Controls */}
-            <div className="flex gap-4 mt-auto">
-                {simCount === 2 && currentStep === 1 && (
-                    <button
-                        className="btn btn-primary"
-                        style={{ flex: 1 }}
-                        onClick={handleNextStep}
-                        disabled={isSimulating || !inputs.height || parseFloat(inputs.height) <= 0}
-                    >
-                        Next: Simulation 2
-                    </button>
-                )}
+            {simCount === 1 && !interpreted && (
+                <div className="tip-box">
+                    <div className="tip-icon-container"><LightbulbIcon /></div>
+                    <div className="tip-content">
+                        <p className="tip-text"><strong>Tip:</strong> Any two values solve for the 3rd.</p>
+                    </div>
+                </div>
+            )}
 
-                {simCount === 2 && currentStep === 2 && (
-                    <button
-                        className="btn btn-secondary"
-                        style={{ flex: '0 1 auto' }}
-                        onClick={handlePrevStep}
-                        disabled={isSimulating}
-                    >
-                        Back
-                    </button>
-                )}
-
-                {(simCount === 1 || (simCount === 2 && currentStep === 2)) && (
-                    <button
-                        className="btn btn-primary"
-                        style={{ flex: 1 }}
-                        onClick={handleSimulate}
-                        disabled={isSimulating}
-                    >
-                        {isSimulating ? 'Simulating...' : 'Simulate Jump'}
-                    </button>
-                )}
-
-                <button
-                    className="btn btn-secondary"
-                    onClick={handleLocalReset}
-                    disabled={isSimulating}
-                >
-                    Reset
+            <div className="btn-container">
+                <button className="btn btn-primary btn-simulate" onClick={handleSimulate} disabled={isSimulating}>
+                    {isSimulating ? 'Simulating...' : <><PlayIcon /> Simulate</>}
+                </button>
+                <button className="btn btn-secondary btn-reset" onClick={handleReset} disabled={isSimulating}>
+                    <ResetIcon /> Reset
                 </button>
             </div>
         </div>

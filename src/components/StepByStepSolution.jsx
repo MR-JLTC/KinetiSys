@@ -5,7 +5,7 @@ const StepByStepSolution = ({ results, inputs }) => {
 
     const h = inputs.height;
     const m = inputs.mass || 0;
-    const g = 9.81;
+    const g = 9.8;
 
     return (
         <div className="card" style={{ marginTop: '2rem' }}>

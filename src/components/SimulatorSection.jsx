@@ -4,10 +4,11 @@ import StickmanSimulation from './StickmanSimulation';
 import ResultsPanel from './ResultsPanel';
 import StepByStepSolution from './StepByStepSolution';
 import TimeHeightChart from './TimeHeightChart';
+import { calculatePhysicsResult } from '../utils/physicsSolver';
 
 const SimulatorSection = () => {
-    const [inputs, setInputs] = useState({ height: '', mass: '' });
-    const [inputs2, setInputs2] = useState({ height: '', mass: '' });
+    const [inputs, setInputs] = useState({ height: '', mass: '', time: '' });
+    const [inputs2, setInputs2] = useState({ height: '', mass: '', time: '' });
     const [simCount, setSimCount] = useState(1);
     const [results, setResults] = useState(null);
     const [results2, setResults2] = useState(null);
@@ -20,53 +21,6 @@ const SimulatorSection = () => {
 
     // Use a ref to store timeout so we can clear it if needed
     const simTimeoutRef = useRef(null);
-
-    const calculatePhysics = (h, mStr) => {
-        const g = 9.81;
-
-        // v = sqrt(2gh)
-        const v = Math.sqrt(2 * g * h);
-
-        // t_up = v/g
-        const t_up = v / g;
-
-        // t_total = 2 * t_up
-        const t_total = 2 * t_up;
-
-        // Use mass if provided, else default to an average 70kg for display purposes
-        // So that we can always show force/energy equations as requested
-        const m = (mStr && parseFloat(mStr) > 0) ? parseFloat(mStr) : 70;
-
-        // Weight = m * g
-        const w = m * g;
-
-        // Potential Energy = mgh
-        const pe = m * g * h;
-
-        // Kinetic Energy at takeoff = 1/2 m v^2
-        // Which should equal PE at the peak due to conservation of energy
-        const ke = 0.5 * m * (v * v);
-
-        // Momentum = m * v
-        const p = m * v;
-
-        // Height vs Time Equation: y(t) = v*t - 0.5*g*t^2
-        const eqStr = `y(t) = ${v.toFixed(2)}t - ${(0.5 * g).toFixed(2)}t²`;
-
-        return {
-            h,
-            v,
-            t_up,
-            t_total,
-            pe,
-            ke,
-            p,
-            w,
-            eqStr,
-            usedMass: m,
-            isDefaultMass: (!mStr || parseFloat(mStr) <= 0)
-        };
-    };
 
     const clearTimer = () => {
         if (simTimeoutRef.current) {
@@ -93,10 +47,11 @@ const SimulatorSection = () => {
     const handleSimulate = () => {
         if (simState !== 'idle' && simState !== 'landed') return;
 
-        // Validate first simulation
+        // Validate first simulation - need at least two parameters or Height/Time
         const h = parseFloat(inputs.height);
-        if (!h || isNaN(h) || h <= 0) {
-            setError('Please enter a valid jump height greater than 0.');
+        const t = parseFloat(inputs.time);
+        if ((!h || isNaN(h)) && (!t || isNaN(t))) {
+            setError('Please enter at least Target Height or Total Airtime.');
             return;
         }
 
@@ -112,8 +67,9 @@ const SimulatorSection = () => {
         let calculatedResults2 = null;
         if (simCount === 2) {
             const h2 = parseFloat(inputs2.height);
-            if (!h2 || isNaN(h2) || h2 <= 0) {
-                setError2('Please enter a valid jump height greater than 0.');
+            const t2 = parseFloat(inputs2.time);
+            if ((!h2 || isNaN(h2)) && (!t2 || isNaN(t2))) {
+                setError2('Please enter at least Target Height or Total Airtime.');
                 return;
             }
 
@@ -124,10 +80,10 @@ const SimulatorSection = () => {
                     return;
                 }
             }
-            calculatedResults2 = calculatePhysics(h2, inputs2.mass);
+            calculatedResults2 = calculatePhysicsResult(inputs2.height, inputs2.mass, inputs2.time);
         }
 
-        const calculatedResults = calculatePhysics(h, inputs.mass);
+        const calculatedResults = calculatePhysicsResult(inputs.height, inputs.mass, inputs.time);
         setResults(calculatedResults);
         setResults2(calculatedResults2);
 
@@ -188,8 +144,8 @@ const SimulatorSection = () => {
 
     const handleReset = () => {
         clearTimer();
-        setInputs({ height: '', mass: '' });
-        setInputs2({ height: '', mass: '' });
+        setInputs({ height: '', mass: '', time: '' });
+        setInputs2({ height: '', mass: '', time: '' });
         setResults(null);
         setResults2(null);
         setAvgVelocity(null);
@@ -234,6 +190,9 @@ const SimulatorSection = () => {
                             isSimulating={['crouch1', 'jumping1', 'crouch2', 'jumping2'].includes(simState)}
                             error={error}
                             error2={error2}
+                            results={results}
+                            results2={results2}
+                            simState={simState}
                         />
                     </div>
 

@@ -131,50 +131,88 @@ const TimeHeightChart = ({ results1, results2, simState, scaleMax, getX, getY, t
             {/* Overlay HTML for crisp textbook text styling */}
             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                 {/* HTML Labels for exactly when the peaks were reached */}
-                {peak1Revealed && (
-                    <div style={{
-                        position: 'absolute',
-                        left: `${getX(t_peak1)}%`,
-                        top: `${getY(results1.h)}%`,
-                        transform: 'translate(-50%, -150%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        animation: 'fadeIn 0.3s ease-in-out'
-                    }}>
-                        <div style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '0.75rem', textShadow: '1px 1px 0px rgba(255,255,255,0.9)' }}>
-                            {results1.h.toFixed(2)}m
+                {peak1Revealed && (() => {
+                    const interp = results1.interpreted;
+                    const isHi = interp?.name === 'Height';
+                    const isAi = interp?.name === 'Airtime';
+                    const isMi = interp?.name === 'Mass';
+                    const solvedColor = '#f59e0b';
+                    const normalColor = '#dc2626';
+                    return (
+                        <div style={{
+                            position: 'absolute',
+                            left: `${getX(t_peak1)}%`,
+                            top: `${getY(results1.h)}%`,
+                            transform: 'translate(-50%, -110%)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            animation: 'fadeIn 0.3s ease-in-out',
+                            background: 'rgba(255,255,255,0.92)',
+                            backdropFilter: 'blur(6px)',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(220, 38, 38, 0.2)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            lineHeight: 1.3,
+                            whiteSpace: 'nowrap'
+                        }}>
+                            <div style={{ color: isHi ? solvedColor : normalColor, fontWeight: 800, fontSize: '0.72rem' }}>
+                                H = {results1.h.toFixed(2)} m {isHi && '★'}
+                            </div>
+                            <div style={{ color: isAi ? solvedColor : normalColor, fontWeight: 700, fontSize: '0.68rem' }}>
+                                T = {results1.t_total.toFixed(2)} s {isAi && '★'}
+                            </div>
+                            <div style={{ color: isMi ? solvedColor : '#64748b', fontWeight: 600, fontSize: '0.62rem' }}>
+                                M = {Number.isInteger(results1.usedMass) ? results1.usedMass.toFixed(0) : results1.usedMass.toFixed(1)} kg {isMi && '★'}
+                            </div>
                         </div>
-                        <div style={{ color: '#dc2626', fontSize: '0.7rem', opacity: 0.8, fontWeight: 'bold', textShadow: '1px 1px 0px rgba(255,255,255,0.9)' }}>
-                            t={t_peak1.toFixed(2)}s
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
 
-                {results2 && peak2Revealed && (
-                    <div style={{
-                        position: 'absolute',
-                        left: `${getX(t_peak2)}%`,
-                        top: `${getY(results2.h)}%`,
-                        transform: 'translate(-50%, -150%)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        animation: 'fadeIn 0.3s ease-in-out'
-                    }}>
-                        <div style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '0.75rem', textShadow: '1px 1px 0px rgba(255,255,255,0.9)' }}>
-                            {results2.h.toFixed(2)}m
+                {results2 && peak2Revealed && (() => {
+                    const interp = results2.interpreted;
+                    const isHi = interp?.name === 'Height';
+                    const isAi = interp?.name === 'Airtime';
+                    const isMi = interp?.name === 'Mass';
+                    const solvedColor = '#f59e0b';
+                    const normalColor = '#dc2626';
+                    return (
+                        <div style={{
+                            position: 'absolute',
+                            left: `${getX(t_peak2)}%`,
+                            top: `${getY(results2.h)}%`,
+                            transform: 'translate(-50%, -110%)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            animation: 'fadeIn 0.3s ease-in-out',
+                            background: 'rgba(255,255,255,0.92)',
+                            backdropFilter: 'blur(6px)',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(220, 38, 38, 0.2)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            lineHeight: 1.3,
+                            whiteSpace: 'nowrap'
+                        }}>
+                            <div style={{ color: isHi ? solvedColor : normalColor, fontWeight: 800, fontSize: '0.72rem' }}>
+                                H = {results2.h.toFixed(2)} m {isHi && '★'}
+                            </div>
+                            <div style={{ color: isAi ? solvedColor : normalColor, fontWeight: 700, fontSize: '0.68rem' }}>
+                                T = {results2.t_total.toFixed(2)} s {isAi && '★'}
+                            </div>
+                            <div style={{ color: isMi ? solvedColor : '#64748b', fontWeight: 600, fontSize: '0.62rem' }}>
+                                M = {Number.isInteger(results2.usedMass) ? results2.usedMass.toFixed(0) : results2.usedMass.toFixed(1)} kg {isMi && '★'}
+                            </div>
                         </div>
-                        <div style={{ color: '#dc2626', fontSize: '0.7rem', opacity: 0.8, fontWeight: 'bold', textShadow: '1px 1px 0px rgba(255,255,255,0.9)' }}>
-                            {t_peak2 > t_peak1 ? 'final' : 'peak2'}
-                        </div>
-                    </div>
-                )}
+                    );
+                })()}
             </div>
             <style>{`
                 @keyframes fadeIn {
                     from { opacity: 0; transform: translate(-50%, -10px) scale(0.8); }
-                    to { opacity: 1; transform: translate(-50%, -150%) scale(1); }
+                    to { opacity: 1; transform: translate(-50%, -110%) scale(1); }
                 }
             `}</style>
         </div>

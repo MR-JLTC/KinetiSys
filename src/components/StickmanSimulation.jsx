@@ -21,12 +21,11 @@ const StickmanSimulation = ({ inputs1, inputs2, results1, results2, simState }) 
         : 1.0;
 
     // Calculate precise timeline durations based on SimulatorSection logic
-    const rawMass1 = inputs1 && inputs1.mass ? parseFloat(inputs1.mass) : 0;
-    const m1 = (isNaN(rawMass1) || rawMass1 <= 0) ? 0 : rawMass1;
+    // Use results.usedMass (which includes solver-interpreted mass) over raw inputs
+    const m1 = results1 ? results1.usedMass : ((inputs1 && inputs1.mass && parseFloat(inputs1.mass) > 0) ? parseFloat(inputs1.mass) : 0);
     const crouch1 = 0.2 + ((Math.min(Math.max(m1, 30), 150) - 30) / 120) * 0.4;
 
-    const rawMass2 = inputs2 && inputs2.mass ? parseFloat(inputs2.mass) : 0;
-    const m2 = (isNaN(rawMass2) || rawMass2 <= 0) ? 0 : rawMass2;
+    const m2 = results2 ? results2.usedMass : ((inputs2 && inputs2.mass && parseFloat(inputs2.mass) > 0) ? parseFloat(inputs2.mass) : 0);
     const crouch2 = 0.2 + ((Math.min(Math.max(m2, 30), 150) - 30) / 120) * 0.4;
 
     const t_total1 = results1 ? results1.t_total : 0;
@@ -57,7 +56,7 @@ const StickmanSimulation = ({ inputs1, inputs2, results1, results2, simState }) 
     const isSim2Active = simState.includes('2');
     const graphHeightPercent = GRAPH_BOTTOM - GRAPH_TOP; // 70%
 
-    const g = 9.81;
+    const g = 9.8;
     const mass = isSim2Active ? m2 : m1;
     const crouchDuration = isSim2Active ? crouch2 : crouch1;
 
@@ -93,12 +92,16 @@ const StickmanSimulation = ({ inputs1, inputs2, results1, results2, simState }) 
         const val = parseFloat((i * timeMarkerStep).toFixed(2));
         timeMarkers.push({ label: `${val.toFixed(1)}s`, val });
     }
-    
-    // Always add the exact peak times as highlighted markers if not already present
-    [t_peak1, t_peak2].forEach((pt, idx) => {
-        const h = idx === 0 ? targetHeight1 : targetHeight2;
-        if (h > 0 && !timeMarkers.some(m => Math.abs(m.val - pt) < 0.01)) {
-            timeMarkers.push({ label: `${pt.toFixed(2)}s`, val: pt, isTarget: true });
+
+    // Always add the formula's total airtime as highlighted markers on the X-axis
+    // Show T from the formula result, positioned at the peak of the jump
+    const formulaT1 = results1 ? results1.t_total : 0;
+    const formulaT2 = results2 ? results2.t_total : 0;
+    [{val: t_peak1, label: `T=${formulaT1.toFixed(2)}s`, h: targetHeight1},
+     {val: t_peak2, label: `T=${formulaT2.toFixed(2)}s`, h: targetHeight2}
+    ].forEach(({ val, label, h }) => {
+        if (h > 0 && !timeMarkers.some(m => Math.abs(m.val - val) < 0.01)) {
+            timeMarkers.push({ label, val, isTarget: true });
         }
     });
     // Collision detection: remove standard time markers that are too close to exact peak times (e.g. within 0.15s)
@@ -297,26 +300,63 @@ const StickmanSimulation = ({ inputs1, inputs2, results1, results2, simState }) 
                 />
             </div>
 
-            {/* Mass Badge */}
-            {(results1 || results2) && (
-                <div style={{
+            {/* Results Info Panel – shows formula-computed values during animation */}
+            {(results1 || results2) && (() => {
+                const activeRes = isSim2Active ? results2 : results1;
+                if (!activeRes) return null;
+                const interp = activeRes.interpreted;
+                const heightStr = activeRes.h > 0 ? activeRes.h.toFixed(2) : '—';
+                const airtimeStr = activeRes.t_total > 0 ? activeRes.t_total.toFixed(2) : '—';
+                const massStr = activeRes.usedMass > 0 ? (Number.isInteger(activeRes.usedMass) ? activeRes.usedMass.toFixed(0) : activeRes.usedMass.toFixed(1)) : '—';
+
+                const isHeightInterp = interp?.name === 'Height';
+                const isAirtimeInterp = interp?.name === 'Airtime';
+                const isMassInterp = interp?.name === 'Mass';
+
+                const badgeStyle = {
                     position: 'absolute',
-                    top: '3%',
+                    top: '10%',
                     right: '3%',
-                    background: 'rgba(15, 23, 42, 0.85)',
-                    backdropFilter: 'blur(8px)',
+                    background: 'rgba(15, 23, 42, 0.88)',
+                    backdropFilter: 'blur(10px)',
                     color: '#e2e8f0',
-                    padding: '6px 14px',
-                    borderRadius: '8px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
+                    padding: '6px 12px',
+                    borderRadius: '10px',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
                     zIndex: 30,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                    Body Mass: {mass} kg
-                </div>
-            )}
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    lineHeight: 1.5
+                };
+
+                const accentStyle = { color: '#60a5fa', fontWeight: 800 };
+                const solvedStyle = { color: '#fbbf24', fontWeight: 800 };
+                const labelStyle = { color: '#94a3b8', fontSize: '0.7rem' };
+
+                return (
+                    <div style={badgeStyle}>
+                        <div>
+                            <span style={labelStyle}>Height: </span>
+                            <span style={isHeightInterp ? solvedStyle : accentStyle}>{heightStr} m</span>
+                            {isHeightInterp && <span style={{ color: '#fbbf24', fontSize: '0.6rem', marginLeft: '4px' }}>★</span>}
+                        </div>
+                        <div>
+                            <span style={labelStyle}>Airtime: </span>
+                            <span style={isAirtimeInterp ? solvedStyle : accentStyle}>{airtimeStr} s</span>
+                            {isAirtimeInterp && <span style={{ color: '#fbbf24', fontSize: '0.6rem', marginLeft: '4px' }}>★</span>}
+                        </div>
+                        <div>
+                            <span style={labelStyle}>Mass: </span>
+                            <span style={isMassInterp ? solvedStyle : accentStyle}>{massStr} kg</span>
+                            {isMassInterp && <span style={{ color: '#fbbf24', fontSize: '0.6rem', marginLeft: '4px' }}>★</span>}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Stickman – positioned at the CENTER of the jump zone, jumps in place */}
             <div
@@ -386,6 +426,7 @@ const StickmanSimulation = ({ inputs1, inputs2, results1, results2, simState }) 
                     position: 'relative'
                 }}></div>
             </div>
+
         </div>
     );
 };
